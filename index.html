@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Songs That Remind Me of Us</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: url('background.jpeg') no-repeat center center fixed;
+        background-size: cover;
+      height: 100vh;
+      font-family: 'Quicksand', sans-serif;
+      transition: background 0.8s ease;
+      text-align: center;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      color: white;
+      margin-bottom: 0.3rem;
+      z-index: 2;
+    }
+
+    p.subtitle {
+      color: white;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+      z-index: 2;
+    }
+
+    .card-container {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      width: 100%;
+      max-width: 360px;
+      gap: 20px;
+      scroll-behavior: smooth;
+      padding-bottom: 20px;
+      -webkit-overflow-scrolling: touch;
+      z-index: 2;
+    }
+
+    .card-container::-webkit-scrollbar {
+      display: none;
+    }
+    .card-container {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .card {
+      background: #f7eeed;
+      border: 2px solid #f4bbc9;
+      border-radius: 20px;
+      padding: 1rem;
+      width: 100%;
+      min-width: 320px;
+      max-width: 320px;
+      height: 500px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      scroll-snap-align: center;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      transform: scale(0.9);
+      opacity: 0.6;
+    }
+
+    .card.active {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    .card.active.playing {
+      animation: pulseCard 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseCard {
+      0%, 100% {
+        box-shadow: 0 0 10px rgba(241, 145, 172, 0.2);
+      }
+      50% {
+        box-shadow: 0 0 20px rgba(241, 145, 172, 0.5);
+      }
+    }
+
+    .album-art {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+      border-radius: 15px;
+      margin-bottom: 1rem;
+    }
+
+    .info {
+      margin-bottom: 0.5rem;
+    }
+
+    .info h2 {
+      font-size: 1.2rem;
+      color: #f191ac;
+    }
+
+    .info p {
+      font-size: 0.9rem;
+      color: #f6a6bb;
+    }
+
+    .progress {
+      width: 100%;
+      height: 6px;
+      background: #f4bbc9;
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 0.5rem 0;
+      position: relative;
+      transition: background 0.3s ease;
+    }
+
+    .progress-filled {
+      height: 100%;
+      background: #f191ac;
+      width: 0;
+      transition: width 0.2s ease;
+    }
+
+    .progress.flash::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.5);
+      animation: flashBar 0.5s ease-out;
+      pointer-events: none;
+    }
+
+    @keyframes flashBar {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .time-info {
+      font-size: 0.8rem;
+      color: #f6a6bb;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 4px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+
+    .controls button {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #f191ac;
+      transition: transform 0.1s ease, box-shadow 0.3s ease;
+    }
+
+    .controls button:active {
+      transform: scale(1.2);
+      box-shadow: 0 0 10px #f191ac99;
+    }
+
+    audio {
+      display: none;
+    }
+
+    #message-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 3;
+    }
+
+    .love-message {
+      position: absolute;
+      max-width: 200px;
+      background: #fff0f5;
+      color: #f191ac;
+      border: 2px solid #f4bbc9;
+      border-radius: 20px;
+      padding: 0.6rem 1rem;
+      font-size: 0.9rem;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      opacity: 0;
+      animation: popInOut 4s ease forwards;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    @keyframes popInOut {
+      0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.9);
+      }
+      10% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      90% {
+        opacity: 1;
+        transform: translateY(-10px) scale(1.02);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+      }
+    }
+
+    .heart-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .heart {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: #f191ac;
+      transform: rotate(45deg);
+      animation: float 8s linear infinite;
+      opacity: 0.7;
+    }
+
+    .heart::before,
+    .heart::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: #f191ac;
+      border-radius: 50%;
+    }
+
+    .heart::before {
+      top: -10px;
+      left: 0;
+    }
+
+    .heart::after {
+      left: -10px;
+      top: 0;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(100vh) rotate(45deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.7;
+      }
+      100% {
+        transform: translateY(-10vh) rotate(45deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Playlist for Gaby</h1>
+  <p class="subtitle">Just some songs that remind me of YOU - Allen</p>
+
+  <div class="card-container" id="cardContainer"></div>
+  <div id="message-container"></div>
+  <div class="heart-container"></div>
+
+  <script>
+    const songs = [
+      {
+        title: 'Daylight',
+        artist: 'Taylor Swift',
+        image: 'daylight.webp',
+        audio: 'daylight.mp3'
+      },
+      {
+        title: 'Glue Song',
+        artist: 'Beabadoobee',
+        image: 'gluesong.webp',
+        audio: 'gluesong.mp3'
+      },
+      {
+        title: 'Those Eyes',
+        artist: 'New West',
+        image: 'thoseeyes.jpeg',
+        audio: 'thoseeyes.mp3'
+      },
+      {
+        title: 'Lover',
+        artist: 'Taylor Swift',
+        image: 'lover.jpeg',
+        audio: 'lover.mp3'
+      },
+      {
+        title: 'Melting',
+        artist: 'Kali Uchis',
+        image: 'melting.jpeg',
+        audio: 'melting.mp3'
+      },
+      {
+        title: 'Yellow',
+        artist: 'Coldplay',
+        image: 'yellow.jpeg',
+        audio: 'yellow.mp3'
+      },
+      {
+        title: 'Apocalypse',
+        artist: 'Cigarettes After Sex',
+        image: 'apocalypse.jpeg',
+        audio: 'apocalypse.mp3'
+      },
+      {
+        title: 'Reflections',
+        artist: 'The Neighbourhood',
+        image: 'reflections.jpeg',
+        audio: 'reflections.mp3'
+      },
+    ];
+
+    const container = document.getElementById('cardContainer');
+
+    songs.forEach((song, index) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      card.innerHTML = `
+        <img class="album-art" src="${song.image}" alt="${song.title}" />
+        <div class="info">
+          <h2>${song.title}</h2>
+          <p>${song.artist}</p>
+        </div>
+        <div class="progress" id="progress-bar-${index}">
+          <div class="progress-filled" id="progress-${index}"></div>
+        </div>
+        <div class="time-info">
+          <span id="current-${index}">0:00</span>
+          <span id="duration-${index}">0:00</span>
+        </div>
+        <audio id="audio-${index}" src="${song.audio}"></audio>
+        <div class="controls">
+          <button onclick="rewind(${index})">&#9664;</button>
+          <button onclick="togglePlay(${index}, this)">&#9658;</button>
+          <button onclick="forward(${index})">&#9654;</button>
+        </div>
+      `;
+
+      container.appendChild(card);
+
+      const audio = document.getElementById(`audio-${index}`);
+      const progress = document.getElementById(`progress-${index}`);
+      const progressBar = document.getElementById(`progress-bar-${index}`);
+      const currentTimeEl = document.getElementById(`current-${index}`);
+      const durationEl = document.getElementById(`duration-${index}`);
+
+      audio.addEventListener('loadedmetadata', () => {
+        durationEl.textContent = formatTime(audio.duration);
+      });
+
+      audio.addEventListener('timeupdate', () => {
+        const percent = (audio.currentTime / audio.duration) * 100;
+        progress.style.width = percent + '%';
+        currentTimeEl.textContent = formatTime(audio.currentTime);
+      });
+
+        audio.addEventListener('ended', () => {
+        let nextIndex = index + 1;
+        if (nextIndex >= songs.length) nextIndex = 0;
+
+        const nextCard = container.children[nextIndex];
+        nextCard.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+
+        setTimeout(() => {
+            const nextPlayBtn = nextCard.querySelector('.controls button:nth-child(2)');
+            togglePlay(nextIndex, nextPlayBtn);
+        }, 800); // Wait a bit for smooth scroll before playing
+        });
+
+      progressBar.addEventListener('click', (e) => {
+        const rect = progressBar.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const width = rect.width;
+        const percent = x / width;
+        audio.currentTime = percent * audio.duration;
+
+        progressBar.classList.add('flash');
+        setTimeout(() => progressBar.classList.remove('flash'), 500);
+      });
+    });
+
+    function togglePlay(index, btn) {
+      const audio = document.getElementById(`audio-${index}`);
+      const allAudios = document.querySelectorAll('audio');
+      const allButtons = document.querySelectorAll('.controls button:nth-child(2)');
+      const cards = document.querySelectorAll('.card');
+
+      allAudios.forEach((a, i) => {
+        if (i !== index) a.pause();
+      });
+
+      allButtons.forEach((b, i) => {
+        if (i !== index) b.textContent = '►';
+      });
+
+      cards.forEach((card, i) => {
+        card.classList.remove('playing');
+      });
+
+      if (audio.paused) {
+        audio.play();
+        btn.textContent = '❚❚';
+        cards[index].classList.add('playing');
+      } else {
+        audio.pause();
+        btn.textContent = '►';
+        cards[index].classList.remove('playing');
+      }
+    }
+
+    function rewind(index) {
+      const audio = document.getElementById(`audio-${index}`);
+      audio.currentTime = 0;
+    }
+
+    function forward(index) {
+      const audio = document.getElementById(`audio-${index}`);
+      audio.currentTime += 10;
+    }
+
+    function formatTime(seconds) {
+      const min = Math.floor(seconds / 60);
+      const sec = Math.floor(seconds % 60).toString().padStart(2, '0');
+      return `${min}:${sec}`;
+    }
+
+    function setActiveCard() {
+      const cards = document.querySelectorAll('.card');
+      const containerRect = container.getBoundingClientRect();
+
+      cards.forEach(card => {
+        const cardRect = card.getBoundingClientRect();
+        const cardCenter = cardRect.left + cardRect.width / 2;
+        const containerCenter = containerRect.left + containerRect.width / 2;
+        const distance = Math.abs(containerCenter - cardCenter);
+
+        if (distance < cardRect.width / 2) {
+          card.classList.add('active');
+        } else {
+          card.classList.remove('active');
+        }
+      });
+    }
+
+    container.addEventListener('scroll', () => {
+      requestAnimationFrame(setActiveCard);
+      clearTimeout(container._snapTimeout);
+      container._snapTimeout = setTimeout(() => snapToClosestCard(), 150);
+    });
+
+    window.addEventListener('load', setActiveCard);
+    window.addEventListener('resize', setActiveCard);
+
+    function snapToClosestCard() {
+      const cards = document.querySelectorAll('.card');
+      const containerRect = container.getBoundingClientRect();
+      let minDistance = Infinity;
+      let closestCard = null;
+
+      cards.forEach(card => {
+        const cardRect = card.getBoundingClientRect();
+        const cardCenter = cardRect.left + cardRect.width / 2;
+        const containerCenter = containerRect.left + containerRect.width / 2;
+        const distance = Math.abs(containerCenter - cardCenter);
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestCard = card;
+        }
+      });
+
+      if (closestCard) {
+        closestCard.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+      }
+    }
+
+    const loveMessages = [
+      "You're my favorite notification - Allen.",
+      "Every song is sweeter thinking about you with it.",
+      "Thinking of you, always!",
+      "You're my safe place - Allen",
+      "You + Me = 🌸",
+      "Forever isn't long enough actually",
+      "Second beach date when?",
+      "BE MINE ALREADY!",
+    ];
+
+    function createLoveMessage() {
+      const msg = document.createElement('div');
+      msg.className = 'love-message';
+      msg.textContent = loveMessages[Math.floor(Math.random() * loveMessages.length)];
+
+      const x = Math.random() * (window.innerWidth - 200);
+      const y = Math.random() * (window.innerHeight - 100);
+      msg.style.left = `${x}px`;
+      msg.style.top = `${y}px`;
+
+      document.getElementById('message-container').appendChild(msg);
+      setTimeout(() => msg.remove(), 4000);
+    }
+
+    setInterval(() => {
+      if (Math.random() < 0.7) createLoveMessage();
+    }, 3000);
+
+    function createHeart() {
+      const heart = document.createElement('div');
+      heart.className = 'heart';
+      heart.style.left = `${Math.random() * 100}%`;
+      heart.style.animationDuration = `${6 + Math.random() * 4}s`;
+      heart.style.opacity = Math.random() * 0.5 + 0.3;
+
+      document.querySelector('.heart-container').appendChild(heart);
+      setTimeout(() => heart.remove(), 10000);
+    }
+
+    setInterval(createHeart, 2000);
+  </script>
+</body>
+</html>
